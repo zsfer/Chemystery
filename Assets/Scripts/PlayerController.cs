@@ -7,6 +7,7 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] float _moveSpeed;
     Rigidbody2D _rb;
+    Animator _anim;
 
     InputSystem_Actions _inputs;
     Vector2 _moveVec;
@@ -24,6 +25,14 @@ public class PlayerController : MonoBehaviour
         _inputs.Player.Move.canceled += OnMoveStop;
     }
 
+    void Start()
+    {
+        // game started not from Character Select Screen
+        if ( Game.Instance == null ) {
+            SwitchCharacterSprite( Character.FEMALE );
+        }
+    }
+
     void OnMove( InputAction.CallbackContext context ) =>
         _moveVec = context.ReadValue<Vector2>();
 
@@ -35,9 +44,25 @@ public class PlayerController : MonoBehaviour
         _rb.linearVelocity = _moveVec.normalized * _moveSpeed;
     }
 
+    void Update()
+    {
+        if ( _moveVec.normalized.magnitude != 0 ) {
+            _anim.SetFloat( "X", _moveVec.normalized.x );
+            _anim.SetFloat( "Y", _moveVec.normalized.y );
+        }
+        _anim.SetFloat( "Speed", _rb.linearVelocity.magnitude );
+    }
+
     public void SwitchCharacterSprite( Character c )
     {
-        for ( int i = 0; i < transform.childCount; i++ )
-            transform.GetChild( i ).gameObject.SetActive( i == (int)c );
+        for ( int i = 0; i < transform.childCount; i++ ) {
+            var isChar =  i == (int)c;
+            var child = transform.GetChild( i ).gameObject;
+            child.SetActive( isChar );
+
+            if ( isChar ) {
+                _anim = child.GetComponent<Animator>();
+            }
+        }
     }
 }
